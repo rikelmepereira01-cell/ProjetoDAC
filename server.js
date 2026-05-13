@@ -1,4 +1,6 @@
 require('dotenv').config();
+
+console.log('VARIAVEIS DISPONIVEIS:', Object.keys(process.env).join(', '));
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
