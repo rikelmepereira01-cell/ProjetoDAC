@@ -9,7 +9,7 @@ const pool = require('./db');
 const usuariosRouter = require('./routes/usuarios');
 const produtosRouter = require('./routes/produtos');
 const clientesRouter = require('./routes/clientes');
-const feedbackRouter = require('./routes/feedbacks');
+const feedbacksRouter = require('./routes/feedbacks');
 
 const app = express();
 
@@ -64,7 +64,7 @@ app.get('/api/me', (req, res) => {
 app.use('/api', usuariosRouter.router);
 app.use('/api', produtosRouter);
 app.use('/api', clientesRouter);
-app.use('/api', feedbackRouter);
+app.use('/api', feedbacksRouter);
 
 // Páginas HTML
 app.get('/', (req, res) => {
@@ -82,8 +82,8 @@ app.get('/cadastros/clientes', (req, res) => {
 app.get('/cadastros/produtos', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
 });
-app.get('/cadastros/feedback', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'feedback.html'));
+app.get('/cadastros/feedbacks', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'feedbacks.html'));
 });
 
 const PORT = process.env.PORT || 3000;
