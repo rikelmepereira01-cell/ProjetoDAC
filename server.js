@@ -9,7 +9,7 @@ const pool = require('./db');
 const usuariosRouter = require('./routes/usuarios');
 const produtosRouter = require('./routes/produtos');
 const clientesRouter = require('./routes/clientes');
-
+const feedbackRouter = require('./routes/feedback');
 
 const app = express();
 
@@ -76,6 +76,7 @@ app.get('/api/me', (req, res) => {
 app.use('/api', require('./routes/usuarios').router);
 app.use('/api', produtosRouter);
 app.use('/api', clientesRouter);
+app.use('/api', feedbackRouter);
 
 app.get('/cadastros/produtos', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'produtos.html'));

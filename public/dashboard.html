@@ -9,40 +9,42 @@
   <style>
     body { background: #f0f4f8; }
     .sidebar {
-      width: 260px;
-      min-height: 100vh;
-      background: #1e3a5f;
-      position: fixed;
-      top: 0; left: 0;
-      display: flex;
-      flex-direction: column;
+      width: 260px; min-height: 100vh; background: #1e3a5f;
+      position: fixed; top: 0; left: 0; display: flex; flex-direction: column;
     }
-    .sidebar-brand {
-      padding: 1.5rem;
-      background: rgba(0,0,0,.2);
-      text-align: center;
-    }
+    .sidebar-brand { padding: 1.5rem; background: rgba(0,0,0,.2); text-align: center; }
     .sidebar-brand h5 { color: #fff; font-weight: 700; margin: .5rem 0 0; font-size: .95rem; }
     .sidebar-brand p  { color: rgba(255,255,255,.5); font-size: .75rem; margin: 0; }
     .nav-section { padding: .75rem 1.25rem .25rem; color: rgba(255,255,255,.4); font-size: .7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
     .sidebar .nav-link {
-      color: rgba(255,255,255,.75);
-      padding: .6rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      border-radius: 8px;
-      margin: .1rem .75rem;
-      font-size: .9rem;
-      transition: all .2s;
+      color: rgba(255,255,255,.75); padding: .6rem 1.25rem;
+      display: flex; align-items: center; gap: .6rem;
+      border-radius: 8px; margin: .1rem .75rem; font-size: .9rem; transition: all .2s;
     }
     .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,.12); color: #fff; }
     .sidebar .sub-link { padding-left: 2.8rem; font-size: .85rem; }
     .main { margin-left: 260px; padding: 2rem; }
-    .topbar { background: #fff; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .topbar {
+      background: #fff; border-radius: 12px; padding: 1rem 1.5rem;
+      margin-bottom: 2rem; display: flex; align-items: center;
+      justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
     .topbar h6 { margin: 0; font-weight: 600; color: #1e3a5f; }
     .collapse-icon { transition: transform .2s; }
     .collapsed .collapse-icon { transform: rotate(-90deg); }
+    .stat-card { border: none; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.07); transition: transform .2s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: #1e3a5f; }
+    .stat-label { font-size: .8rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
+    .card-section { border: none; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+    .shortcut-btn {
+      border: 2px dashed #dee2e6; border-radius: 12px; padding: 1.5rem;
+      text-align: center; color: #6c757d; text-decoration: none;
+      display: block; transition: all .2s;
+    }
+    .shortcut-btn:hover { border-color: #2563eb; color: #2563eb; background: #f0f4ff; }
+    .shortcut-btn i { font-size: 1.6rem; display: block; margin-bottom: .4rem; }
   </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
 
       <div class="nav-section mt-2">Módulos</div>
 
-      <!-- Cadastros (com submenu) -->
+
       <a class="nav-link" data-bs-toggle="collapse" href="#menuCadastros">
         <i class="bi bi-folder2-open"></i> Cadastros
         <i class="bi bi-chevron-down ms-auto collapse-icon"></i>
@@ -71,6 +73,12 @@
       <div class="collapse show" id="menuCadastros">
         <a href="/cadastros/usuarios" class="nav-link sub-link">
           <i class="bi bi-people"></i> Usuários
+        </a>
+        <a href="/cadastros/clientes" class="nav-link sub-link">
+          <i class="bi bi-person-vcard"></i> Clientes
+        </a>
+        <a href="/cadastros/produtos" class="nav-link sub-link">
+          <i class="bi bi-box-seam"></i> Produtos
         </a>
       </div>
     </div>
@@ -89,5 +97,175 @@
       <span id="nomeUsuario" class="text-muted small"></span>
     </div>
 
+    <!-- Cards de totais -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="total-usuarios">—</div>
+              <div class="stat-label">Usuários</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="bi bi-person-vcard-fill"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="total-clientes">—</div>
+              <div class="stat-label">Clientes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="total-produtos">—</div>
+              <div class="stat-label">Produtos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+              <i class="bi bi-chat-left-text-fill"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="total-feedback">—</div>
+              <div class="stat-label">Feedbacks</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atalhos e tabela de últimos feedbacks -->
     <div class="row g-3">
-      <div
+      <!-- Atalhos rápidos -->
+      <div class="col-lg-4">
+        <div class="card card-section p-3 h-100">
+          <h6 class="fw-semibold text-secondary mb-3" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.5px">
+            <i class="bi bi-lightning-charge me-1"></i>Acesso Rápido
+          </h6>
+          <div class="row g-2">
+            <div class="col-6">
+              <a href="/cadastros/usuarios" class="shortcut-btn">
+                <i class="bi bi-people"></i>
+                <span style="font-size:.8rem">Usuários</span>
+              </a>
+            </div>
+            <div class="col-6">
+              <a href="/cadastros/clientes" class="shortcut-btn">
+                <i class="bi bi-person-vcard"></i>
+                <span style="font-size:.8rem">Clientes</span>
+              </a>
+            </div>
+            <div class="col-6">
+              <a href="/cadastros/produtos" class="shortcut-btn">
+                <i class="bi bi-box-seam"></i>
+                <span style="font-size:.8rem">Produtos</span>
+              </a>
+            </div>
+            <div class="col-6">
+              <a href="/cadastros/feedback" class="shortcut-btn">
+                <i class="bi bi-chat-left-text"></i>
+                <span style="font-size:.8rem">Feedbacks</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Últimos feedbacks -->
+      <div class="col-lg-8">
+        <div class="card card-section h-100">
+          <div class="card-header bg-white border-bottom py-3 px-4">
+            <h6 class="mb-0 fw-semibold" style="font-size:.85rem;color:#1e3a5f">
+              <i class="bi bi-clock-history me-2 text-primary"></i>Últimos Feedbacks
+            </h6>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0" id="tabela-feedback">
+              <thead>
+                <tr>
+                  <th class="ps-4" style="font-size:.75rem;color:#6c757d;text-transform:uppercase">Cliente</th>
+                  <th style="font-size:.75rem;color:#6c757d;text-transform:uppercase">Produto</th>
+                  <th style="font-size:.75rem;color:#6c757d;text-transform:uppercase">Observação</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-feedback">
+                <tr><td colspan="3" class="text-center py-4 text-muted">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Verifica autenticação
+    fetch('/api/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.autenticado) { window.location.href = '/'; return; }
+        document.getElementById('nomeUsuario').textContent = '👤 ' + d.usuario.nome;
+        carregarStats();
+      });
+
+    async function carregarStats() {
+      try {
+        // Carrega totais em paralelo
+        const [usuarios, clientes, produtos, feedbacks] = await Promise.all([
+          fetch('/api/usuarios', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/clientes', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/produtos',  { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/feedback',  { credentials: 'include' }).then(r => r.json()),
+        ]);
+
+        document.getElementById('total-usuarios').textContent = Array.isArray(usuarios) ? usuarios.length : '—';
+        document.getElementById('total-clientes').textContent = Array.isArray(clientes) ? clientes.length : '—';
+        document.getElementById('total-produtos').textContent  = Array.isArray(produtos)  ? produtos.length  : '—';
+        document.getElementById('total-feedback').textContent  = Array.isArray(feedbacks)  ? feedbacks.length  : '—';
+
+        // Últimos 5 feedbacks
+        const tbody = document.getElementById('tbody-feedback');
+        const ultimos = Array.isArray(feedbacks) ? feedbacks.slice(-5).reverse() : [];
+        if (!ultimos.length) {
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">Nenhum feedback registrado.</td></tr>';
+        } else {
+          tbody.innerHTML = ultimos.map(f => `
+            <tr>
+              <td class="ps-4">${f.cliente_nome || '<span class="text-muted">—</span>'}</td>
+              <td>${f.produto_descricao || '<span class="text-muted">—</span>'}</td>
+              <td class="text-truncate" style="max-width:200px">${f.observacao}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Erro ao carregar stats:', e);
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>
