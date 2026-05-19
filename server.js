@@ -9,7 +9,7 @@ const pool = require('./db');
 const usuariosRouter = require('./routes/usuarios');
 const produtosRouter = require('./routes/produtos');
 const clientesRouter = require('./routes/clientes');
-const feedbackRouter = require('./routes/feedback');
+const feedbackRouter = require('./routes/feedbacks');
 
 const app = express();
 
