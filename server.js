@@ -7,6 +7,9 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 const pool = require('./db');
 const usuariosRouter = require('./routes/usuarios');
+const produtosRouter = require('./routes/produtos');
+const clientesRouter = require('./routes/clientes');
+
 
 const app = express();
 
@@ -71,6 +74,15 @@ app.get('/api/me', (req, res) => {
 });
 
 app.use('/api', require('./routes/usuarios').router);
+app.use('/api', produtosRouter);
+app.use('/api', clientesRouter);
+
+app.get('/cadastros/produtos', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
+});
+app.get('/cadastros/clientes', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'clientes.html'));
+});
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
