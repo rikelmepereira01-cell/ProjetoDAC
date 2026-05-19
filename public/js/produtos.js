@@ -1,89 +1,190 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../../db');
-function isAuth(req, res, next) {
-  if (req.session && req.session.usuario) return next();
-  return res.status(401).json({ error: 'Não autenticado' });
-} 
-// Tipos de produto
-router.get('/produto-tipos', isAuth, async (req, res) => {
+let idParaExcluir = null;
+let excluindoTipo = false;
+
+async function carregarTipos() {
+  const tbody = document.getElementById('tbody-tipos');
   try {
-    const [rows] = await db.query('SELECT material_tipo_id as id, descricao FROM tb_produto_tipo ORDER BY descricao');
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar tipos' });
+    const res = await fetch('/api/produto-tipos', { credentials: 'include' });
+    if (res.status === 401) { window.location.href = '/'; return; }
+    const tipos = await res.json();
+    if (!tipos.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">Nenhum tipo cadastrado.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = tipos.map((t, i) => `
+      <tr>
+        <td class="ps-4">${i + 1}</td>
+        <td>${t.descricao}</td>
+        <td class="text-center">
+          <button class="btn btn-outline-danger btn-sm" onclick="abrirModalExcluirTipo(${t.id}, '${t.descricao}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-danger">Erro ao carregar tipos.</td></tr>';
   }
-});
-router.post('/produto-tipos', isAuth, async (req, res) => {
-  const { descricao } = req.body;
-  if (!descricao) return res.status(400).json({ error: 'Descrição obrigatória' });
+}
+
+async function carregarProdutos() {
+  const tbody = document.getElementById('tbody-produtos');
   try {
-    const [result] = await db.query('INSERT INTO tb_produto_tipo (descricao) VALUES (?)', [descricao]);
-    res.status(201).json({ id: result.insertId, descricao });
-  } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Tipo já existe' });
-    res.status(500).json({ error: 'Erro ao criar tipo' });
+    const res = await fetch('/api/produtos', { credentials: 'include' });
+    if (res.status === 401) { window.location.href = '/'; return; }
+    const produtos = await res.json();
+    if (!produtos.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">Nenhum produto cadastrado.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = produtos.map((p, i) => `
+      <tr>
+        <td class="ps-4">${i + 1}</td>
+        <td>${p.descricao}</td>
+        <td>${p.tipo_descricao || '—'}</td>
+        <td class="text-center">
+          <button class="btn btn-outline-primary btn-sm me-1"
+            onclick="abrirModalEditar(${p.id}, '${p.descricao}', ${p.produto_tipo_id})">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-outline-danger btn-sm" onclick="abrirModalExcluirProduto(${p.id}, '${p.descricao}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-danger">Erro ao carregar produtos.</td></tr>';
   }
-});
-router.delete('/produto-tipos/:id', isAuth, async (req, res) => {
+}
+
+async function carregarSelectTipos() {
+  const sel = document.getElementById('produto-tipo');
+  const res = await fetch('/api/produto-tipos', { credentials: 'include' });
+  const tipos = await res.json();
+  sel.innerHTML = '<option value="">— Selecione —</option>' +
+    tipos.map(t => `<option value="${t.id}">${t.descricao}</option>`).join('');
+}
+
+function abrirModalTipo() {
+  document.getElementById('tipo-id').value = '';
+  document.getElementById('tipo-descricao').value = '';
+  new bootstrap.Modal(document.getElementById('modalTipo')).show();
+}
+
+async function salvarTipo() {
+  const descricao = document.getElementById('tipo-descricao').value.trim();
+  if (!descricao) { mostrarToast('Informe a descrição.', 'bg-warning'); return; }
   try {
-    await db.query('DELETE FROM tb_produto_tipo WHERE material_tipo_id = ?', [req.params.id]);
-    res.json({ mensagem: 'Tipo excluído' });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao excluir tipo' });
+    const res = await fetch('/api/produto-tipos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ descricao })
+    });
+    const data = await res.json();
+    if (!res.ok) { mostrarToast(data.error || 'Erro ao salvar.', 'bg-danger'); return; }
+    bootstrap.Modal.getInstance(document.getElementById('modalTipo')).hide();
+    mostrarToast('Tipo criado!', 'bg-success');
+    carregarTipos();
+  } catch (e) {
+    mostrarToast('Erro de conexão.', 'bg-danger');
   }
-});
-// Produtos
-router.get('/produtos', isAuth, async (req, res) => {
+}
+
+function abrirModalProduto() {
+  document.getElementById('produto-id').value = '';
+  document.getElementById('produto-descricao').value = '';
+  document.getElementById('modal-produto-titulo').innerHTML = '<i class="bi bi-box-seam me-2"></i>Novo Produto';
+  carregarSelectTipos();
+  new bootstrap.Modal(document.getElementById('modalProduto')).show();
+}
+
+function abrirModalEditar(id, descricao, tipoId) {
+  document.getElementById('produto-id').value = id;
+  document.getElementById('produto-descricao').value = descricao;
+  document.getElementById('modal-produto-titulo').innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Produto';
+  carregarSelectTipos().then(() => {
+    document.getElementById('produto-tipo').value = tipoId;
+  });
+  new bootstrap.Modal(document.getElementById('modalProduto')).show();
+}
+
+async function salvarProduto() {
+  const id = document.getElementById('produto-id').value;
+  const descricao = document.getElementById('produto-descricao').value.trim();
+  const produto_tipo_id = document.getElementById('produto-tipo').value;
+  if (!descricao || !produto_tipo_id) { mostrarToast('Preencha todos os campos.', 'bg-warning'); return; }
+
+  const url = id ? `/api/produtos/${id}` : '/api/produtos';
+  const method = id ? 'PUT' : 'POST';
   try {
-    const [rows] = await db.query(`
-      SELECT p.produto_id as id, p.descricao, p.produto_tipo_id,
-             t.descricao as tipo_descricao, p.atualizado_em
-      FROM tb_produtos p
-      LEFT JOIN tb_produto_tipo t ON t.material_tipo_id = p.produto_tipo_id
-      ORDER BY p.descricao
-    `);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar produtos' });
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ descricao, produto_tipo_id: parseInt(produto_tipo_id) })
+    });
+    const data = await res.json();
+    if (!res.ok) { mostrarToast(data.error || 'Erro ao salvar.', 'bg-danger'); return; }
+    bootstrap.Modal.getInstance(document.getElementById('modalProduto')).hide();
+    mostrarToast(id ? 'Produto atualizado!' : 'Produto criado!', 'bg-success');
+    carregarProdutos();
+  } catch (e) {
+    mostrarToast('Erro de conexão.', 'bg-danger');
   }
-});
-router.post('/produtos', isAuth, async (req, res) => {
-  const { descricao, produto_tipo_id } = req.body;
-  if (!descricao || !produto_tipo_id) return res.status(400).json({ error: 'Descrição e tipo são obrigatórios' });
+}
+
+function abrirModalExcluirTipo(id, nome) {
+  idParaExcluir = id;
+  excluindoTipo = true;
+  document.getElementById('nome-excluir').textContent = nome;
+  new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+}
+
+function abrirModalExcluirProduto(id, nome) {
+  idParaExcluir = id;
+  excluindoTipo = false;
+  document.getElementById('nome-excluir').textContent = nome;
+  new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+}
+
+async function confirmarExclusao() {
+  const url = excluindoTipo
+    ? `/api/produto-tipos/${idParaExcluir}`
+    : `/api/produtos/${idParaExcluir}`;
   try {
-    const now = new Date().toTimeString().split(' ')[0];
-    const [result] = await db.query(
-      'INSERT INTO tb_produtos (descricao, produto_tipo_id, atualizado_em, atualizado_por) VALUES (?, ?, ?, ?)',
-      [descricao, produto_tipo_id, now, req.session.usuario.id]
-    );
-    res.status(201).json({ id: result.insertId, descricao, produto_tipo_id });
-  } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Produto já existe' });
-    res.status(500).json({ error: 'Erro ao criar produto' });
+    const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
+    bootstrap.Modal.getInstance(document.getElementById('modalExcluir')).hide();
+    if (res.ok) {
+      mostrarToast('Excluído com sucesso!', 'bg-success');
+      carregarTipos();
+      carregarProdutos();
+    } else {
+      mostrarToast('Erro ao excluir.', 'bg-danger');
+    }
+  } catch (e) {
+    mostrarToast('Erro de conexão.', 'bg-danger');
   }
-});
-router.put('/produtos/:id', isAuth, async (req, res) => {
-  const { descricao, produto_tipo_id } = req.body;
-  if (!descricao || !produto_tipo_id) return res.status(400).json({ error: 'Descrição e tipo são obrigatórios' });
-  try {
-    const now = new Date().toTimeString().split(' ')[0];
-    await db.query(
-      'UPDATE tb_produtos SET descricao=?, produto_tipo_id=?, atualizado_em=?, atualizado_por=? WHERE produto_id=?',
-      [descricao, produto_tipo_id, now, req.session.usuario.id, req.params.id]
-    );
-    res.json({ mensagem: 'Produto atualizado' });
-  } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Produto já existe' });
-    res.status(500).json({ error: 'Erro ao atualizar produto' });
-  }
-});
-router.delete('/produtos/:id', isAuth, async (req, res) => {
-  try {
-    await db.query('DELETE FROM tb_produtos WHERE produto_id = ?', [req.params.id]);
-    res.json({ mensagem: 'Produto excluído' });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao excluir produto' });
-  }
-});
-module.exports = router;
+}
+
+function mostrarToast(msg, bgClass) {
+  const toast = document.getElementById('toast');
+  toast.className = `toast align-items-center text-white border-0 ${bgClass}`;
+  document.getElementById('toast-msg').textContent = msg;
+  new bootstrap.Toast(toast, { delay: 3000 }).show();
+}
+
+async function logout() {
+  await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+  window.location.href = '/';
+}
+
+fetch('/api/me', { credentials: 'include' })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.autenticado) { window.location.href = '/'; return; }
+    document.getElementById('nomeUsuario').textContent = '👤 ' + d.usuario.nome;
+    carregarTipos();
+    carregarProdutos();
+  });

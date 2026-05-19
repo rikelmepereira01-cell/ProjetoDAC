@@ -4,7 +4,7 @@ const db = require('../db');
 function isAuth(req, res, next) {
   if (req.session && req.session.usuario) return next();
   return res.status(401).json({ error: 'Não autenticado' });
-}
+} 
 // Tipos de produto
 router.get('/produto-tipos', isAuth, async (req, res) => {
   try {
