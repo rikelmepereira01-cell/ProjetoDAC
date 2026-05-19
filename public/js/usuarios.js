@@ -4,7 +4,7 @@ async function carregarUsuarios() {
   const tbody = document.getElementById('tbody-usuarios');
   try {
     const res = await fetch('/api/usuarios', { credentials: 'include' });
-    if (res.status === 401) { window.location.href = '/login.html'; return; }
+    if (res.status === 401) { window.location.href = '/'; return; } // ← corrigido
     const usuarios = await res.json();
     if (!usuarios.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhum usuário encontrado.</td></tr>';
@@ -115,7 +115,7 @@ function mostrarToast(msg, bgClass) {
 
 async function logout() {
   await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-  window.location.href = '/login.html';
+  window.location.href = '/'; // ← corrigido
 }
 
 carregarUsuarios();

@@ -1,11 +1,11 @@
 require('dotenv').config();
 
-console.log('VARIAVEIS DISPONIVEIS:', Object.keys(process.env).join(', '));
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const pool = require('./db');
+
 const usuariosRouter = require('./routes/usuarios');
 const produtosRouter = require('./routes/produtos');
 const clientesRouter = require('./routes/clientes');
@@ -24,23 +24,14 @@ app.use(session({
   cookie: { maxAge: 1000 * 60 * 60 * 8 }
 }));
 
-function requireLogin(req, res, next) {
-  if (!req.session.usuario) {
-    return res.status(401).json({ erro: 'Nao autorizado. Faca login.' });
-  }
-  next();
-}
-
+// Auth
 app.post('/api/login', async (req, res) => {
   const { login, senha } = req.body;
   if (!login || !senha) {
     return res.status(400).json({ erro: 'Informe login e senha.' });
   }
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM tb_usuarios WHERE login = ?',
-      [login]
-    );
+    const [rows] = await pool.query('SELECT * FROM tb_usuarios WHERE login = ?', [login]);
     if (rows.length === 0) {
       return res.status(401).json({ erro: 'Usuario ou senha invalidos.' });
     }
@@ -49,11 +40,7 @@ app.post('/api/login', async (req, res) => {
     if (!senhaValida) {
       return res.status(401).json({ erro: 'Usuario ou senha invalidos.' });
     }
-    req.session.usuario = {
-      id: usuario.usuario_id,
-      nome: usuario.nome,
-      login: usuario.login,
-    };
+    req.session.usuario = { id: usuario.usuario_id, nome: usuario.nome, login: usuario.login };
     res.json({ mensagem: 'Login realizado com sucesso.', usuario: req.session.usuario });
   } catch (err) {
     console.error(err);
@@ -73,28 +60,30 @@ app.get('/api/me', (req, res) => {
   res.json({ autenticado: true, usuario: req.session.usuario });
 });
 
-app.use('/api', require('./routes/usuarios').router);
+// Rotas da API
+app.use('/api', usuariosRouter.router);
 app.use('/api', produtosRouter);
 app.use('/api', clientesRouter);
 app.use('/api', feedbackRouter);
 
-app.get('/cadastros/produtos', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
+// Páginas HTML
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+app.get('/cadastros/usuarios', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'usuarios.html'));
 });
 app.get('/cadastros/clientes', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'clientes.html'));
 });
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+app.get('/cadastros/produtos', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
 });
-
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-app.get('/cadastros/usuarios', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'usuarios.html'));
+app.get('/cadastros/feedback', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'feedback.html'));
 });
 
 const PORT = process.env.PORT || 3000;
