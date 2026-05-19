@@ -14,12 +14,13 @@ router.get('/feedback', isAuth, async (req, res) => {
              p.nome as cliente_nome, pr.descricao as produto_descricao,
              f.cliente_id, f.produto_id
       FROM tb_feedback f
-      LEFT JOIN tb_pessoas p  ON p.pessoa_id   = f.cliente_id
-      LEFT JOIN tb_produtos pr ON pr.produto_id = f.produto_id
+      LEFT JOIN tb_pessoas p   ON p.pessoa_id   = f.cliente_id
+      LEFT JOIN tb_produtos pr ON pr.produto_id  = f.produto_id
       ORDER BY f.feedback_id DESC
     `);
     res.json(rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erro ao buscar feedbacks' });
   }
 });
@@ -35,6 +36,7 @@ router.post('/feedback', isAuth, async (req, res) => {
     );
     res.status(201).json({ id: result.insertId });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erro ao criar feedback' });
   }
 });
@@ -49,6 +51,7 @@ router.put('/feedback/:id', isAuth, async (req, res) => {
     );
     res.json({ mensagem: 'Feedback atualizado' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erro ao atualizar feedback' });
   }
 });
@@ -58,6 +61,7 @@ router.delete('/feedback/:id', isAuth, async (req, res) => {
     await db.query('DELETE FROM tb_feedback WHERE feedback_id = ?', [req.params.id]);
     res.json({ mensagem: 'Feedback excluído' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erro ao excluir feedback' });
   }
 });
