@@ -4,7 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const path = require('path');
-const pool = require('./db');
+const pool = require('../db');
 
 const usuariosRouter = require('./routes/usuarios');
 const produtosRouter = require('./routes/produtos');
